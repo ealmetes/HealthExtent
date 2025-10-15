@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using HealthExtent.Api.Data;
 using HealthExtent.Api.Services;
+using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +34,39 @@ builder.Services.AddDbContext<HealthExtentDbContext>(options =>
     });
 });
 
+// JWT Authentication
+var jwtIssuer = builder.Configuration["Jwt:Issuer"];
+var jwtAudience = builder.Configuration["Jwt:Audience"];
+var jwtSecretKey = builder.Configuration["Jwt:SecretKey"];
+
+if (!string.IsNullOrEmpty(jwtSecretKey) && jwtSecretKey != "REPLACE_WITH_SECRET_KEY_FROM_USER_SECRETS")
+{
+    builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(jwtSecretKey))
+        };
+    });
+}
+else
+{
+    // For development without JWT configured, add a default authentication scheme
+    builder.Services.AddAuthentication();
+}
+
 // Register services
 builder.Services.AddScoped<IHealthExtentService, HealthExtentService>();
 
@@ -58,6 +92,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = null; // Keep original casing
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
+
+// FluentValidation
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // API Documentation
 builder.Services.AddEndpointsApiExplorer();

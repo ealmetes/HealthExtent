@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HealthExtent.Api.DTOs;
 using HealthExtent.Api.Services;
+using FluentValidation;
 
 namespace HealthExtent.Api.Controllers;
 
@@ -13,11 +14,16 @@ public class AuditController : ControllerBase
 {
     private readonly IHealthExtentService _service;
     private readonly ILogger<AuditController> _logger;
+    private readonly IValidator<WriteAuditRequest> _validator;
 
-    public AuditController(IHealthExtentService service, ILogger<AuditController> logger)
+    public AuditController(
+        IHealthExtentService service,
+        ILogger<AuditController> logger,
+        IValidator<WriteAuditRequest> validator)
     {
         _service = service;
         _logger = logger;
+        _validator = validator;
     }
 
     /// <summary>
@@ -28,8 +34,9 @@ public class AuditController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<WriteAuditResponse>> WriteAudit([FromBody] WriteAuditRequest request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        var validationResult = await _validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
 
         var result = await _service.WriteAuditAsync(request);
 

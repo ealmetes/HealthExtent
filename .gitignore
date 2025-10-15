@@ -46,10 +46,11 @@ ScaffoldingReadMe.txt
 *.nuget.props
 *.nuget.targets
 
-# Azure SQL connection strings with sensitive data
-appsettings.json
+# Azure SQL connection strings with sensitive data (keep placeholder version in git)
 appsettings.*.json
-!appsettings.Development.json.template
+!appsettings.json
+!appsettings.Development.json
+!appsettings.Production.json
 
 # SQL scripts with sensitive data (keep templates)
 **/fix_rls.sql
@@ -74,6 +75,15 @@ appsettings.*.json
 *.tmp
 *.log
 *.cache
+
+# HTTP test files
+*.http
+
+# Launch settings (user-specific)
+**/Properties/launchSettings.json
+
+# Claude Code workspace
+.claude/
 
 # Azure deployment files
 *.PublishSettings

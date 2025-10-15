@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HealthExtent.Api.DTOs;
 using HealthExtent.Api.Services;
+using FluentValidation;
 
 namespace HealthExtent.Api.Controllers;
 
@@ -13,11 +14,16 @@ public class EncountersController : ControllerBase
 {
     private readonly IHealthExtentService _service;
     private readonly ILogger<EncountersController> _logger;
+    private readonly IValidator<UpsertEncounterRequest> _validator;
 
-    public EncountersController(IHealthExtentService service, ILogger<EncountersController> logger)
+    public EncountersController(
+        IHealthExtentService service,
+        ILogger<EncountersController> logger,
+        IValidator<UpsertEncounterRequest> validator)
     {
         _service = service;
         _logger = logger;
+        _validator = validator;
     }
 
     /// <summary>
@@ -28,8 +34,9 @@ public class EncountersController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<UpsertEncounterResponse>> UpsertEncounter([FromBody] UpsertEncounterRequest request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        var validationResult = await _validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
 
         var result = await _service.UpsertEncounterAsync(request);
 

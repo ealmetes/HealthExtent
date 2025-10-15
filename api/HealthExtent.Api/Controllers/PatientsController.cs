@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HealthExtent.Api.DTOs;
 using HealthExtent.Api.Services;
+using FluentValidation;
 
 namespace HealthExtent.Api.Controllers;
 
@@ -14,12 +15,18 @@ public class PatientsController : ControllerBase
     private readonly IHealthExtentService _service;
     private readonly ILogger<PatientsController> _logger;
     private readonly ITenantProvider _tenantProvider;
+    private readonly IValidator<UpsertPatientRequest> _validator;
 
-    public PatientsController(IHealthExtentService service, ILogger<PatientsController> logger, ITenantProvider tenantProvider)
+    public PatientsController(
+        IHealthExtentService service,
+        ILogger<PatientsController> logger,
+        ITenantProvider tenantProvider,
+        IValidator<UpsertPatientRequest> validator)
     {
         _service = service;
         _logger = logger;
         _tenantProvider = tenantProvider;
+        _validator = validator;
     }
 
     /// <summary>
@@ -30,8 +37,9 @@ public class PatientsController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<UpsertPatientResponse>> UpsertPatient([FromBody] UpsertPatientRequest request)
     {
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        var validationResult = await _validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
+            return BadRequest(validationResult.Errors);
 
         var result = await _service.UpsertPatientAsync(request);
 
