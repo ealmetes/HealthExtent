@@ -4,8 +4,8 @@ using HealthExtent.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure URLs
-builder.WebHost.UseUrls("http://localhost:5000", "https://localhost:5001");
+// Configure URLs - Bind to all interfaces to allow Mirth Connect access
+builder.WebHost.UseUrls("http://0.0.0.0:5000", "https://0.0.0.0:5001");
 
 // Configure Logging
 builder.Logging.ClearProviders();
@@ -39,11 +39,15 @@ builder.Services.AddScoped<IHealthExtentService, HealthExtentService>();
 // CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+        ?? new[] { "http://localhost:3000" };
+
+    options.AddPolicy("ApiCorsPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
-              .AllowAnyHeader();
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
@@ -91,16 +95,19 @@ var app = builder.Build();
 // Configure the HTTP request pipeline
 app.UseHttpLogging();
 
-// Swagger (enable in all environments for easy testing)
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// Swagger (only in development environment)
+if (app.Environment.IsDevelopment())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Health Extent API v1");
-    c.RoutePrefix = string.Empty; // Serve Swagger UI at root
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Health Extent API v1");
+        c.RoutePrefix = string.Empty; // Serve Swagger UI at root
+    });
+}
 
 // CORS
-app.UseCors("AllowAll");
+app.UseCors("ApiCorsPolicy");
 
 // Security headers
 app.Use(async (context, next) =>
@@ -113,6 +120,7 @@ app.Use(async (context, next) =>
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Health check endpoint

@@ -21,6 +21,9 @@ public class HealthExtentService : IHealthExtentService
     {
         try
         {
+            _logger.LogInformation("Starting patient upsert for TenantKey={TenantKey}, PatientId={PatientId}, AssigningAuthority={AssigningAuthority}",
+                request.TenantKey, request.PatientIdExternal, request.AssigningAuthority);
+
             var outputParam = new SqlParameter
             {
                 ParameterName = "@OutPatientKey",
@@ -49,6 +52,8 @@ public class HealthExtentService : IHealthExtentService
 
             var patientKey = (long)outputParam.Value;
 
+            _logger.LogInformation("Patient upserted successfully with PatientKey={PatientKey}", patientKey);
+
             return new UpsertPatientResponse
             {
                 PatientKey = patientKey,
@@ -58,7 +63,8 @@ public class HealthExtentService : IHealthExtentService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error upserting patient");
+            _logger.LogError(ex, "Error upserting patient for TenantKey={TenantKey}, PatientId={PatientId}. Error: {ErrorMessage}",
+                request.TenantKey, request.PatientIdExternal, ex.Message);
             return new UpsertPatientResponse
             {
                 Success = false,
