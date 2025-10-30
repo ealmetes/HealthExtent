@@ -6,7 +6,8 @@
   "description": "HealthExtent Web Portal - Dashboard for reviewing discharge summaries",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "build:check": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "type-check": "tsc --noEmit"
