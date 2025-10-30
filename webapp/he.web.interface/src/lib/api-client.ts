@@ -18,12 +18,13 @@ import type {
   TCMMetrics,
 } from '@/types';
 
-// Use empty baseURL - Vite proxy will forward /api requests to production API
-const API_BASE_URL = '';
+// In production, use full API URL from environment variable
+// In development, use empty string to work with Vite proxy
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 console.log('=== API Client Configuration ===');
-console.log('Using Vite proxy to forward requests to production API');
-console.log('Production API: http://he-api-dev-eus2.eastus2.azurecontainer.io:8080');
+console.log('Environment:', import.meta.env.MODE);
+console.log('API Base URL:', API_BASE_URL || 'Using Vite proxy (dev mode)');
 console.log('================================');
 
 class ApiClient {
