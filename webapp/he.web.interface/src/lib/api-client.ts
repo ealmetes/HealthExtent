@@ -1072,9 +1072,17 @@ if (filters?.mrn || filters?.givenName || filters?.familyName) {
       params: { skip: 0, take: 100 }
     });
     // Filter for readmitted encounters (VisitStatus = "Readmitted" or "R")
-    return response.data.filter((enc: any) =>
+    const readmitted = response.data.filter((enc: any) =>
       enc.VisitStatus?.toUpperCase() === 'READMITTED' || enc.VisitStatus?.toUpperCase() === 'R'
     );
+
+    // Add PatientName field by constructing from Patient data
+    return readmitted.map((enc: any) => ({
+      ...enc,
+      PatientName: enc.Patient
+        ? `${enc.Patient.GivenName || ''} ${enc.Patient.FamilyName || ''}`.trim() || 'Unknown Patient'
+        : enc.PatientName || 'Unknown Patient'
+    }));
   }
 }
 
