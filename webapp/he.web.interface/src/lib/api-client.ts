@@ -1065,6 +1065,17 @@ if (filters?.mrn || filters?.givenName || filters?.familyName) {
     });
     return response.data;
   }
+
+  async getReadmittedEncounters(): Promise<any[]> {
+    const tenantKey = this.getTenantKey ? this.getTenantKey() : 'jY4rw2QSwyW0xIAnn2Xa7k2CGfF2';
+    const response = await this.client.get<any[]>(`/api/Encounters/tenant/${tenantKey}`, {
+      params: { skip: 0, take: 100 }
+    });
+    // Filter for readmitted encounters (VisitStatus = "Readmitted" or "R")
+    return response.data.filter((enc: any) =>
+      enc.VisitStatus?.toUpperCase() === 'READMITTED' || enc.VisitStatus?.toUpperCase() === 'R'
+    );
+  }
 }
 
 export const apiClient = new ApiClient();

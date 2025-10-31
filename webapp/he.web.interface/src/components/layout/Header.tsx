@@ -13,10 +13,12 @@ export function Header() {
   const { user, logout, tenantKey } = useFirebaseAuth();
   const [organizationName, setOrganizationName] = useState<string | null>(null);
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+  const [isReadmittedOpen, setIsReadmittedOpen] = useState(false);
   const [isAdmittedOpen, setIsAdmittedOpen] = useState(false);
   const [isDischargedOpen, setIsDischargedOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<AlertTab>('live');
   const alertsRef = useRef<HTMLDivElement>(null);
+  const readmittedRef = useRef<HTMLDivElement>(null);
   const admittedRef = useRef<HTMLDivElement>(null);
   const dischargedRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +47,13 @@ export function Header() {
   const { data: dischargedEncounters } = useQuery({
     queryKey: ['discharged-encounters'],
     queryFn: () => apiClient.getDischargedEncounters(),
+    refetchInterval: 60000, // Refetch every 60 seconds
+  });
+
+  // Fetch readmitted encounters - always fetch to show count
+  const { data: readmittedEncounters } = useQuery({
+    queryKey: ['readmitted-encounters'],
+    queryFn: () => apiClient.getReadmittedEncounters(),
     refetchInterval: 60000, // Refetch every 60 seconds
   });
 
@@ -100,12 +109,116 @@ export function Header() {
     }
   }, [isDischargedOpen]);
 
+  // Close readmitted popup when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (readmittedRef.current && !readmittedRef.current.contains(event.target as Node)) {
+        setIsReadmittedOpen(false);
+      }
+    }
+
+    if (isReadmittedOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isReadmittedOpen]);
+
   return (
     <header className="bg-[#1E1E1E] border-b border-[#2A2A2A] sticky top-0 z-10 shadow-lg shadow-black/50">
       <div className="px-6 lg:px-8 flex justify-end">
         <div className="flex justify-between items-center h-16">
           {/* Right Side - User Info & Actions */}
           <div className="flex items-center gap-4">
+            {/* Readmitted Encounters - ALERT */}
+            <div className="relative" ref={readmittedRef}>
+              <button
+                onClick={() => setIsReadmittedOpen(!isReadmittedOpen)}
+                className="relative p-2 text-[#888888] hover:text-red-500 hover:bg-white/5 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                {readmittedEncounters && readmittedEncounters.length > 0 && (
+                  <span className="absolute top-1 right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+                    {readmittedEncounters.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Readmitted Encounters Popup */}
+              {isReadmittedOpen && (
+                <div className="absolute right-0 mt-2 w-96 bg-[#1E1E1E] border-2 border-red-500 rounded-lg shadow-2xl overflow-hidden z-50" style={{ boxShadow: '0 4px 20px rgba(239, 68, 68, 0.4)' }}>
+                  {/* Header */}
+                  <div className="px-4 py-3 border-b border-red-500/30 bg-red-900/20 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+                      <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span className='text-red-400'>Readmitted Patients</span> {readmittedEncounters && `(${readmittedEncounters.length})`}
+                      {readmittedEncounters && readmittedEncounters.length > 0 && (
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-red-600 text-white">
+                          ALERT
+                        </span>
+                      )}
+                    </h3>
+                    <button
+                      onClick={() => setIsReadmittedOpen(false)}
+                      className="text-[#888888] hover:text-white transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Readmitted Encounters List */}
+                  <div className="max-h-96 overflow-y-auto">
+                    {!readmittedEncounters || readmittedEncounters.length === 0 ? (
+                      <div className="px-4 py-8 text-center text-[#888888]">
+                        No readmitted encounters
+                      </div>
+                    ) : (
+                      readmittedEncounters.map((encounter: any, index: number) => (
+                        <div
+                          key={index}
+                          onClick={() => encounter.EncounterKey && navigate(`/app/discharge-summaries/${encounter.EncounterKey}`)}
+                          className="px-4 py-3 border-b border-[#2A2A2A] hover:bg-red-900/10 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-2 h-2 bg-red-500 rounded-full mt-1.5 animate-pulse"></div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-white truncate">
+                                {encounter.PatientName || 'Unknown Patient'}
+                              </p>
+                              <p className="text-xs text-[#888888] mt-1">
+                                {encounter.Location || encounter.HospitalName || 'Unknown Hospital'}
+                              </p>
+                              <p className="text-xs text-red-400 mt-1 font-medium">
+                                Readmitted: {encounter.AdmitDateTime ? new Date(encounter.AdmitDateTime).toLocaleDateString() : 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-4 py-3 border-t border-[#2A2A2A] bg-[#0A0A0A]">
+                    <button
+                      onClick={() => {
+                        navigate('/app/discharge-summaries?visitStatus=Readmitted');
+                        setIsReadmittedOpen(false);
+                      }}
+                      className="w-full text-xs font-medium text-red-400 hover:text-red-300 transition-colors"
+                    >
+                      View All Readmitted Patients →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Admitted Encounters */}
             <div className="relative" ref={admittedRef}>
               <button
