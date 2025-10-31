@@ -187,6 +187,7 @@ export function DischargeSummaryFiltersComponent({
               <option value="">All</option>
               <option value="Admitted">Admitted</option>
               <option value="Discharged">Discharged</option>
+              <option value="Readmitted">Readmitted</option>
             </select>
           </div>
 

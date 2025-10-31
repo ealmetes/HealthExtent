@@ -135,6 +135,11 @@ export function DashboardHome() {
     // 30-day readmission rate (placeholder - would need ReadmissionSourceEncKey)
     const readmissionRate = 0; // TODO: Calculate when readmission data available
 
+    // Readmitted encounters count (VisitStatus = "Readmitted" or "R")
+    const readmittedCount = encounters?.data?.filter(
+      (enc) => enc.visitStatus?.toUpperCase() === 'READMITTED' || enc.visitStatus?.toUpperCase() === 'R'
+    ).length || 0;
+
     return {
       activeEncounters,
       admittedThisMonth,
@@ -143,6 +148,7 @@ export function DashboardHome() {
       activeCareTransitions,
       pendingFollowUps,
       readmissionRate,
+      readmittedCount,
     };
   }, [encounters?.data, careTransitions?.data]);
 
@@ -312,6 +318,36 @@ export function DashboardHome() {
             </div>
           </div>
         </div>
+
+        {/* Readmitted Patients - ALERT */}
+        <button
+          onClick={() => navigate('/app/dashboard?visitStatus=Readmitted')}
+          className="bg-[#1E1E1E] border-2 border-red-500 rounded-lg p-5 hover:bg-[#2A2A2A] transition-colors cursor-pointer text-left w-full"
+          style={{ boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)' }}
+        >
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="rounded-full bg-gradient-to-br from-red-500 to-red-600 p-3 animate-pulse">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-5 w-0 flex-1">
+              <dl>
+                <dt className="text-sm font-medium text-red-400 truncate flex items-center gap-2">
+                  Readmitted Patients
+                  {executiveMetrics.readmittedCount > 0 && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-900 text-red-200">
+                      ALERT
+                    </span>
+                  )}
+                </dt>
+                <dd className="text-3xl font-semibold text-red-500">{executiveMetrics.readmittedCount}</dd>
+              </dl>
+            </div>
+          </div>
+        </button>
       </div>
 
       {/* Secondary Metrics Row */}
