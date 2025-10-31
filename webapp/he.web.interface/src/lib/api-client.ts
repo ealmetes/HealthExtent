@@ -1076,13 +1076,24 @@ if (filters?.mrn || filters?.givenName || filters?.familyName) {
       enc.VisitStatus?.toUpperCase() === 'READMITTED' || enc.VisitStatus?.toUpperCase() === 'R'
     );
 
-    // Add PatientName field by constructing from Patient data
-    return readmitted.map((enc: any) => ({
-      ...enc,
-      PatientName: enc.Patient
-        ? `${enc.Patient.GivenName || ''} ${enc.Patient.FamilyName || ''}`.trim() || 'Unknown Patient'
-        : enc.PatientName || 'Unknown Patient'
-    }));
+    // Add PatientName field from nested Patient object
+    return readmitted.map((enc: any) => {
+      // First try to use Patient.PatientName if it exists
+      let patientName = enc.Patient?.PatientName;
+
+      // If not available, construct from GivenName and FamilyName
+      if (!patientName && enc.Patient) {
+        const givenName = enc.Patient.GivenName || '';
+        const familyName = enc.Patient.FamilyName || '';
+        patientName = `${givenName} ${familyName}`.trim();
+      }
+
+      return {
+        ...enc,
+        PatientName: patientName || 'Unknown Patient',
+        HospitalName: enc.Hospital?.HospitalName || enc.HospitalName || ''
+      };
+    });
   }
 }
 
