@@ -132,8 +132,29 @@ export function DashboardHome() {
       return parseISO(ct.nextOutreachDate) > now;
     }).length || 0;
 
-    // 30-day readmission rate (placeholder - would need ReadmissionSourceEncKey)
-    const readmissionRate = 0; // TODO: Calculate when readmission data available
+    // 30-day readmission rate - based on readmitted encounters in last 30 days
+    const thirtyDaysAgo = new Date(now);
+    thirtyDaysAgo.setDate(now.getDate() - 30);
+
+    // Count encounters discharged in the last 30 days
+    const dischargedLast30Days = encounters?.data?.filter((enc) => {
+      if (!enc.dischargeDate) return false;
+      const dischargeDate = parseISO(enc.dischargeDate);
+      return dischargeDate >= thirtyDaysAgo && dischargeDate <= now;
+    }).length || 0;
+
+    // Count readmitted encounters in the last 30 days
+    const readmittedLast30Days = encounters?.data?.filter((enc) => {
+      const isReadmitted = enc.visitStatus?.toUpperCase() === 'READMITTED' || enc.visitStatus?.toUpperCase() === 'R';
+      if (!isReadmitted || !enc.admissionDate) return false;
+      const admitDate = parseISO(enc.admissionDate);
+      return admitDate >= thirtyDaysAgo && admitDate <= now;
+    }).length || 0;
+
+    // Calculate readmission rate as percentage
+    const readmissionRate = dischargedLast30Days > 0
+      ? Math.round((readmittedLast30Days / dischargedLast30Days) * 100)
+      : 0;
 
     return {
       activeEncounters,
@@ -354,8 +375,12 @@ export function DashboardHome() {
           </div>
         </div>
 
-        {/* 30-Day Readmission Rate */}
-        <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg p-5" style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)' }}>
+        {/* 30-Day Readmission Rate - Clickable */}
+        <button
+          onClick={() => navigate('/app/discharge-summaries?visitStatus=Readmitted')}
+          className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg p-5 hover:bg-[#2A2A2A] transition-colors cursor-pointer text-left w-full"
+          style={{ boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)' }}
+        >
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="rounded-full bg-gradient-to-br from-red-500 to-red-600 p-3">
@@ -366,12 +391,12 @@ export function DashboardHome() {
             </div>
             <div className="ml-5 w-0 flex-1">
               <dl>
-                <dt className="text-sm font-medium text-[#888888] truncate">30-Day Readmission</dt>
+                <dt className="text-sm font-medium text-[#888888] truncate">30-Day Readmission Rate</dt>
                 <dd className="text-3xl font-semibold text-white">{executiveMetrics.readmissionRate}<span className="text-sm text-[#888888]">%</span></dd>
               </dl>
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* Charts Row */}
