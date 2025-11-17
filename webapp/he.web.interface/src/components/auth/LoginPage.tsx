@@ -69,145 +69,170 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {import.meta.env.VITE_APP_NAME || 'HealthExtent Provider Portal'}
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Sign in to review discharge summaries
-          </p>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email" className="sr-only">
-                Email address
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="flex">
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800">
-                    {error.message || 'Authentication failed'}
-                  </h3>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-[#0A0A0A] via-[#1a1a2e] to-[#16213e]">
+      {/* Navigation */}
+      <nav className="border-b border-[#2A2A2A] bg-[#0A0A0A]/80 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
               </div>
-            </div>
-          )}
-
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-          </div>
-
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
+              <span className="text-xl font-bold text-white">HealthExtent</span>
+            </Link>
+            <div className="flex items-center space-x-4">
               <Link
                 to="/signup"
-                className="font-medium text-indigo-600 hover:text-indigo-500"
+                className="px-4 py-2 text-sm bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/50"
               >
-                Sign up
+                Get Started
               </Link>
-            </p>
-          </div>
-        </form>
-
-        {/* Tenant Selection Modal */}
-        {showTenantSelection && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Select Organization
-              </h3>
-              <p className="text-sm text-gray-600 mb-4">
-                You have access to multiple organizations. Please select which one you'd like to access.
-              </p>
-
-              <div className="space-y-3">
-                {tenants.map((tenant) => (
-                  <label
-                    key={tenant.tenantKey}
-                    className="flex items-center p-4 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
-                    <input
-                      type="radio"
-                      name="tenant"
-                      value={tenant.tenantKey}
-                      checked={selectedTenant === tenant.tenantKey}
-                      onChange={(e) => setSelectedTenant(e.target.value)}
-                      className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">
-                        {tenant.organizationName || tenant.tenantKey}
-                      </p>
-                      <p className="text-sm text-gray-500">{tenant.role}</p>
-                    </div>
-                  </label>
-                ))}
-              </div>
-
-              <div className="mt-6 flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowTenantSelection(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleTenantSelection}
-                  className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                >
-                  Continue
-                </button>
-              </div>
             </div>
           </div>
-        )}
+        </div>
+      </nav>
+
+      {/* Login Form */}
+      <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full">
+          <div className="text-center mb-8">
+            <h2 className="text-4xl font-bold text-white mb-2">
+              Welcome Back
+            </h2>
+            <p className="text-[#888888]">
+              Sign in to access your dashboard
+            </p>
+          </div>
+
+          <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg p-8">
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-[#E0E0E0] mb-2">
+                  Email Address
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg text-white placeholder-[#666666] focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+                  placeholder="john@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-[#E0E0E0] mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className="w-full px-4 py-3 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg text-white placeholder-[#666666] focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+
+              {error && (
+                <div className="rounded-lg bg-red-500/10 border border-red-500/50 p-4">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-red-500 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <p className="text-sm text-red-400">{error.message || 'Authentication failed'}</p>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full px-8 py-4 text-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/50 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+              >
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </button>
+
+              <div className="text-center pt-4">
+                <p className="text-sm text-[#888888]">
+                  Don't have an account?{' '}
+                  <Link
+                    to="/signup"
+                    className="font-medium text-indigo-400 hover:text-indigo-300 transition-colors"
+                  >
+                    Sign up
+                  </Link>
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
+
+      {/* Tenant Selection Modal */}
+      {showTenantSelection && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-lg shadow-2xl p-8 max-w-md w-full">
+            <h3 className="text-2xl font-bold text-white mb-2">
+              Select Organization
+            </h3>
+            <p className="text-sm text-[#888888] mb-6">
+              You have access to multiple organizations. Please select which one you'd like to access.
+            </p>
+
+            <div className="space-y-3 mb-6">
+              {tenants.map((tenant) => (
+                <label
+                  key={tenant.tenantKey}
+                  className="flex items-center p-4 bg-[#0A0A0A] border border-[#2A2A2A] rounded-lg cursor-pointer hover:border-indigo-500 transition-colors"
+                >
+                  <input
+                    type="radio"
+                    name="tenant"
+                    value={tenant.tenantKey}
+                    checked={selectedTenant === tenant.tenantKey}
+                    onChange={(e) => setSelectedTenant(e.target.value)}
+                    className="mr-3 h-4 w-4 text-indigo-600 focus:ring-indigo-500 focus:ring-offset-0 bg-[#0A0A0A] border-[#2A2A2A]"
+                  />
+                  <div className="flex-1">
+                    <p className="font-medium text-white">
+                      {tenant.organizationName || tenant.tenantKey}
+                    </p>
+                    <p className="text-sm text-[#888888]">{tenant.role}</p>
+                  </div>
+                </label>
+              ))}
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowTenantSelection(false)}
+                className="flex-1 px-4 py-3 border border-[#2A2A2A] text-[#E0E0E0] rounded-lg hover:bg-[#2A2A2A] transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleTenantSelection}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all shadow-lg shadow-indigo-500/50 font-medium"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
